@@ -41,7 +41,7 @@ do
     tc qdisc add dev $iface parent 1:$i handle 9$i: sfq
   done
   tc filter add dev $ifout parent 1: \
-     protocol ip prio 2 u32 match ip src $ip/32 flowid 1:$i
+     protocol ip prio 1 u32 match ip src $ip/32 flowid 1:$i
   tc filter add dev $ifin parent 1: \
-     protocol ip prio 3 u32 match ip dst $ip/32 flowid 1:$i
+     protocol ip prio 1 u32 match ip dst $ip/32 flowid 1:$i
 done
