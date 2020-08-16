@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Reference:
+# https://gist.github.com/bradoaks/940616
+# https://github.com/magnific0/wondershaper/blob/master/wondershaper
+# http://linux-ip.net/articles/hfsc.en/ 
+
+ifin=eth0
+ifout=wlan0
+dlimit=500kbit
+limit=1000kbit
+
+# Set root qdisc
+tc qdisc del dev $ifin root
+tc qdisc del dev $ifout root
+tc qdisc del dev $ifin ingress
+tc qdisc del dev $ifout ingress
+tc filter del dev $ifin
+tc filter del dev $ifout
+
+# Outbound limits
+tc qdisc replace dev $ifout root handle 1: hfsc default 9999
+# Default class. Should only matter outside of expected IP range
+tc class add dev $ifout parent 1: classid 1:9999 hfsc sc rate $dlimit ul rate $dlimit
+
+tc qdisc replace dev $ifin root handle 1: hfsc default 9999
+# Default class. Should only matter outside of expected IP range
+tc class add dev $ifin parent 1: classid 1:9999 hfsc sc rate $dlimit ul rate $dlimit
+
+for i in {100..199}
+do
+  echo "Adding limit for 192.168.1.$i"
+  # Limit each class
+  tc class add dev $ifout parent 1: classid 1:$i hfsc sc rate $limit ul rate $limit
+  tc filter add dev $ifout parent 1: protocol ip prio 2 u32 match ip src 192.168.1.$i/32 flowid 1:$i
+  tc qdisc add dev $ifout parent 1:$i handle 9$i: sfq perturb 10
+
+  tc class add dev $ifin parent 1: classid 1:$i hfsc sc rate $limit ul rate $limit
+  tc filter add dev $ifin parent 1: protocol ip prio 2 u32 match ip dst 192.168.1.$i/32 flowid 1:$i
+  tc qdisc add dev $ifin parent 1:$i handle 9$i: sfq perturb 10
+done
