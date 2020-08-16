@@ -7,8 +7,8 @@
 
 ifin=eth0
 ifout=wlan0
-dlimit=500kbit
-limit=1000kbit
+dlimit=256kbit
+limit=1024kbit
 dmax=30ms
 subnet=192.168.1
 ipstart=100
