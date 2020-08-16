@@ -39,5 +39,5 @@ do
 
   # Ingress filter to limit upload rate
   tc filter add dev $iface parent ffff: \
-     protocol ip prio 1 u32 match ip src $ip/32 police rate $limit burst 20k flowid :$i
+     protocol ip prio 1 u32 match ip src $ip/32 police rate $limit burst 20k conform-exceed drop flowid :$i
 done
