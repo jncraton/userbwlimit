@@ -20,23 +20,29 @@ tc qdisc del dev $ifout root 2> /dev/null
 
 # Root qdiscs
 tc qdisc add dev $ifout root handle 1: hfsc default 999
-tc qdisc add dev $ifin root handle 1: hfsc default 999
+tc qdisc add dev $ifin  root handle 1: hfsc default 999
 
 # Default classes. Should only matter outside of expected IP range
-tc class add dev $ifout parent 1: classid 1:999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
-tc class add dev $ifin parent 1: classid 1:999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
+tc class add dev $ifout parent 1: classid 1:999 \
+   hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
+tc class add dev $ifin parent 1: classid 1:999 \
+   hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
 for i in $( seq $ipstart $ipend )
 do
   ip=$subnet.$i
 
   echo "Adding outbound rules for $ip"
-  tc class add dev $ifout parent 1: classid 1:$i hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
-  tc filter add dev $ifout parent 1: protocol ip prio 2 u32 match ip src $ip/32 flowid 1:$i
+  tc class add dev $ifout parent 1: classid 1:$i \
+     hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
+  tc filter add dev $ifout parent 1: \
+     protocol ip prio 2 u32 match ip src $ip/32 flowid 1:$i
   tc qdisc add dev $ifout parent 1:$i handle 9$i: sfq
 
   echo "Adding inbound  rules for $ip"
-  tc class add dev $ifin parent 1: classid 1:$i hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
-  tc filter add dev $ifin parent 1: protocol ip prio 2 u32 match ip dst $ip/32 flowid 1:$i
+  tc class add dev $ifin parent 1: classid 1:$i \
+     hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
+  tc filter add dev $ifin parent 1: \
+     protocol ip prio 2 u32 match ip dst $ip/32 flowid 1:$i
   tc qdisc add dev $ifin parent 1:$i handle 9$i: sfq
 done
