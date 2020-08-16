@@ -14,13 +14,9 @@ subnet=192.168.1
 ipstart=100
 ipend=199
 
-# Set root qdisc
-tc qdisc del dev $ifin root
-tc qdisc del dev $ifout root
-tc qdisc del dev $ifin ingress
-tc qdisc del dev $ifout ingress
-tc filter del dev $ifin
-tc filter del dev $ifout
+# Clean out previous qdiscs
+tc qdisc del dev $ifin root 2> /dev/null
+tc qdisc del dev $ifout root 2> /dev/null
 
 # Outbound limits
 tc qdisc replace dev $ifout root handle 1: hfsc default 9999
