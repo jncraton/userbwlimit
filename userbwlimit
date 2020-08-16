@@ -5,8 +5,7 @@
 # https://github.com/magnific0/wondershaper/blob/master/wondershaper
 # http://linux-ip.net/articles/hfsc.en/ 
 
-ifin=eth0
-ifout=wlan0
+iface=eth0
 dlimit=256kbit
 limit=1024kbit
 dmax=30ms
@@ -15,35 +14,32 @@ ipstart=100
 ipend=199
 
 # Clean out previous qdiscs
-tc qdisc del dev $ifin root 2> /dev/null
-tc qdisc del dev $ifin ingress 2> /dev/null
-tc qdisc del dev $ifout root 2> /dev/null
+tc qdisc del dev $iface root 2> /dev/null
+tc qdisc del dev $iface ingress 2> /dev/null
 
 # Root qdiscs
-tc qdisc add dev $ifin  root handle 1: hfsc default 999
-tc qdisc add dev $ifin handle ffff: ingress
+tc qdisc add dev $iface root handle 1: hfsc default 999
+tc qdisc add dev $iface handle ffff: ingress
 
 # Default classes. Should only matter outside of expected IP range
-tc class add dev $ifout parent 1: classid 1:999 \
+tc class add dev $iface parent 1: classid 1:999 \
    hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
-tc class add dev $ifin parent 1: classid 1:999 \
+tc class add dev $iface parent 1: classid 1:999 \
    hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
 for i in $( seq $ipstart $ipend )
 do
   ip=$subnet.$i
 
-  for iface in $ifin
-  do
-    echo "Adding rules $iface rules for $ip"
-    tc class add dev $iface parent 1: classid 1:$i \
-       hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
-    tc qdisc add dev $iface parent 1:$i handle 1$i sfq
-  done
-  # Ingress filter to limit upload rate
-  tc filter add dev $ifin parent ffff: \
-     protocol ip prio 1 u32 match ip src $ip/32 police rate $limit burst 20k flowid :$i
+  echo "Adding rules rules for $ip"
+  tc class add dev $iface parent 1: classid 1:$i \
+     hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
+  tc qdisc add dev $iface parent 1:$i handle 1$i sfq
   # Pair dst IP to flow
-  tc filter add dev $ifin parent 1: \
+  tc filter add dev $iface parent 1: \
      protocol ip prio 1 u32 match ip dst $ip/32 flowid 1:$i
+
+  # Ingress filter to limit upload rate
+  tc filter add dev $iface parent ffff: \
+     protocol ip prio 1 u32 match ip src $ip/32 police rate $limit burst 20k flowid :$i
 done
