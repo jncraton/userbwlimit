@@ -38,7 +38,7 @@ do
   do
     tc class add dev $iface parent 1: classid 1:$i \
        hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
-    tc qdisc add dev $iface parent 1:$i handle 9$i: sfq
+    tc qdisc add dev $iface parent 1:$i handle ${i}1 sfq
   done
   tc filter add dev $ifout parent 1: \
      protocol ip prio 1 u32 match ip src $ip/32 flowid 1:$i
