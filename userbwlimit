@@ -22,22 +22,22 @@ tc filter del dev $ifout
 # Outbound limits
 tc qdisc replace dev $ifout root handle 1: hfsc default 9999
 # Default class. Should only matter outside of expected IP range
-tc class add dev $ifout parent 1: classid 1:9999 hfsc sc umax 1500b dmax $dmax rate $dlimit ul rate $dlimit
+tc class add dev $ifout parent 1: classid 1:9999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
 tc qdisc replace dev $ifin root handle 1: hfsc default 9999
 # Default class. Should only matter outside of expected IP range
-tc class add dev $ifin parent 1: classid 1:9999 hfsc sc umax 1500b dmax $dmax rate $dlimit ul rate $dlimit
+tc class add dev $ifin parent 1: classid 1:9999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
 for i in {100..199}
 do
   ip=192.168.1.$i
   echo "Adding limit for $ip"
   # Limit each class
-  tc class add dev $ifout parent 1: classid 1:$i hfsc sc umax 1500b dmax $dmax rate $limit ul rate $limit
+  tc class add dev $ifout parent 1: classid 1:$i hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
   tc filter add dev $ifout parent 1: protocol ip prio 2 u32 match ip src $ip/32 flowid 1:$i
   tc qdisc add dev $ifout parent 1:$i handle 9$i: sfq perturb 10
 
-  tc class add dev $ifin parent 1: classid 1:$i hfsc sc umax 1500b dmax $dmax rate $limit ul rate $limit
+  tc class add dev $ifin parent 1: classid 1:$i hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
   tc filter add dev $ifin parent 1: protocol ip prio 2 u32 match ip dst $ip/32 flowid 1:$i
   tc qdisc add dev $ifin parent 1:$i handle 9$i: sfq perturb 10
 done
