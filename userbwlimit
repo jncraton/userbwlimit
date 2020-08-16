@@ -36,20 +36,12 @@ do
 
   for iface in $ifin $ifout
   do
-    # Primary user flow
-    tc class add dev $iface parent 1: classid 1:${i}1 \
+    tc class add dev $iface parent 1: classid 1:$i \
        hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
-    tc qdisc add dev $iface parent 1:${i}1 handle ${i}1 sfq
-    # Small packet user flow
-    tc class add dev $iface parent 1: classid 1:${i}2 \
-       hfsc sc umax 1540b dmax $dmax rate 128kbit ul rate 128kbit
-    tc qdisc add dev $iface parent 1:${i}2 handle ${i}2 sfq
-    # Packet length less than 256
-    tc filter add dev $iface parent 1: \
-       protocol ip prio 1 u32 match u16 0x0000 0xff00 at 2
+    tc qdisc add dev $iface parent 1:$i handle ${i}1 sfq
   done
   tc filter add dev $ifout parent 1: \
-     protocol ip prio 1 u32 match ip src $ip/32 flowid 1:${i}1
+     protocol ip prio 1 u32 match ip src $ip/32 flowid 1:$i
   tc filter add dev $ifin parent 1: \
-     protocol ip prio 1 u32 match ip dst $ip/32 flowid 1:${i}1
+     protocol ip prio 1 u32 match ip dst $ip/32 flowid 1:$i
 done
