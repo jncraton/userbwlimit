@@ -10,6 +10,9 @@ ifout=wlan0
 dlimit=500kbit
 limit=1000kbit
 dmax=30ms
+subnet=192.168.1
+ipstart=100
+ipend=199
 
 # Set root qdisc
 tc qdisc del dev $ifin root
@@ -28,9 +31,9 @@ tc qdisc replace dev $ifin root handle 1: hfsc default 9999
 # Default class. Should only matter outside of expected IP range
 tc class add dev $ifin parent 1: classid 1:9999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
-for i in {100..199}
+for i in $( seq $ipstart $ipend )
 do
-  ip=192.168.1.$i
+  ip=$subnet.$i
   echo "Adding limit for $ip"
   # Limit each class
   tc class add dev $ifout parent 1: classid 1:$i hfsc sc umax 1540b dmax $dmax rate $limit ul rate $limit
