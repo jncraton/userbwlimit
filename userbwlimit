@@ -18,14 +18,13 @@ ipend=199
 tc qdisc del dev $ifin root 2> /dev/null
 tc qdisc del dev $ifout root 2> /dev/null
 
-# Outbound limits
-tc qdisc add dev $ifout root handle 1: hfsc default 9999
-# Default class. Should only matter outside of expected IP range
-tc class add dev $ifout parent 1: classid 1:9999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
+# Root qdiscs
+tc qdisc add dev $ifout root handle 1: hfsc default 999
+tc qdisc add dev $ifin root handle 1: hfsc default 999
 
-tc qdisc add dev $ifin root handle 1: hfsc default 9999
-# Default class. Should only matter outside of expected IP range
-tc class add dev $ifin parent 1: classid 1:9999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
+# Default classes. Should only matter outside of expected IP range
+tc class add dev $ifout parent 1: classid 1:999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
+tc class add dev $ifin parent 1: classid 1:999 hfsc sc umax 1540b dmax $dmax rate $dlimit ul rate $dlimit
 
 for i in $( seq $ipstart $ipend )
 do
