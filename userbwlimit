@@ -29,13 +29,14 @@ tc class add dev $ifin parent 1: classid 1:9999 hfsc sc rate $dlimit ul rate $dl
 
 for i in {100..199}
 do
-  echo "Adding limit for 192.168.1.$i"
+  ip=192.168.1.$i
+  echo "Adding limit for $ip"
   # Limit each class
   tc class add dev $ifout parent 1: classid 1:$i hfsc sc rate $limit ul rate $limit
-  tc filter add dev $ifout parent 1: protocol ip prio 2 u32 match ip src 192.168.1.$i/32 flowid 1:$i
+  tc filter add dev $ifout parent 1: protocol ip prio 2 u32 match ip src $ip/32 flowid 1:$i
   tc qdisc add dev $ifout parent 1:$i handle 9$i: sfq perturb 10
 
   tc class add dev $ifin parent 1: classid 1:$i hfsc sc rate $limit ul rate $limit
-  tc filter add dev $ifin parent 1: protocol ip prio 2 u32 match ip dst 192.168.1.$i/32 flowid 1:$i
+  tc filter add dev $ifin parent 1: protocol ip prio 2 u32 match ip dst $ip/32 flowid 1:$i
   tc qdisc add dev $ifin parent 1:$i handle 9$i: sfq perturb 10
 done
